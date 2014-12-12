@@ -31,15 +31,23 @@ end
 module Egison
   extend self
 
+  module BaseConstructor
+    def base_uncons(val, lamda)
+      val2 = val.clone
+      x = val2.shift
+      lamda.([x, val2])
+    end
+  end
+
   class << Struct
+    include BaseConstructor
+
     def unnil(val)
       [[]]
     end
-    
+
     def uncons(val)
-      val2 = val.clone
-      x = val2.shift
-      [[x, val2]]
+      base_uncons val, ->(x) { [x] }
     end
 
     def unjoin(val)
@@ -61,19 +69,17 @@ module Egison
   end
 
   class << List
+    include BaseConstructor
+
     def uncons(val)
-      val2 = val.clone
-      x = val2.shift
-      [[x, val2]]
+      base_uncons val, ->(x) { [x] }
     end
 
     def uncons_stream(val, &block)
       unless val.is_a?(Array) || val.is_a?(Egison::LazyArray)
         val = test_conv_lazy_array(val)
       end
-      val2 = val.clone
-      x = val2.shift
-      block.([x, val2])
+      base_uncons val, ->(x) { block.(x) }
     end
 
     def unjoin(val)
